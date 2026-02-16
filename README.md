@@ -1,3 +1,10 @@
+### CPU Voxel Raytracer
+
+Old bad code.
+
+built on [tmpl8](https://github.com/jbikker/tmpl8)
+
+#### Original readme:
 The goal is to get all the bars in the top left full. By shining a light with the corresponding color onto one of the absorbers (spheres) it will increase the value but if it’s the wrong light color it will decrease it. So, you would have to find a position for all the lights where they wouldn’t be shining on the wrong absorber (sphere).
 
 If you really can't figure it out then i reccomend checking the gif in week 8 of the learning log showing me completing the level.
