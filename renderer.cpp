@@ -30,26 +30,26 @@ void Renderer::Init()
 	Light pointLight;
 	pointLight.SetType( Light::Type::Point );
 	pointLight.SetPosition( float3( 0.2f, 0.0325f, 0.3f ) );
-	pointLight.SetColor( float3( 0.1f, 0.0f, 0.0f ) * 0 );
+	pointLight.SetColor( float3( 0.1f, 0.0f, 0.0f )  );
 	lights[lightCount++] = new Light( pointLight );
 
 	Light pointLight2;
 	pointLight2.SetType( Light::Type::Point );
 	pointLight2.SetPosition( float3( 0.4f, 0.0325f, 0.5f ) );
-	pointLight2.SetColor( float3( 0.0f, 0.1f, 0.0f ) * 0 );
+	pointLight2.SetColor( float3( 0.0f, 0.1f, 0.0f ) );
 	lights[lightCount++] = new Light( pointLight2 );
 
 	Light pointLight3;
 	pointLight3.SetType( Light::Type::Point );
 	pointLight3.SetPosition( float3( 0.6f, 0.0325f, 0.23f ) );
-	pointLight3.SetColor( float3( 0.0f, 0.0f, 0.1f ) * 0 );
+	pointLight3.SetColor( float3( 0.0f, 0.0f, 0.1f ) );
 	lights[lightCount++] = new Light( pointLight3 );
 
 	Light spotLight;
 	spotLight.SetType( Light::Type::Spot );
 	spotLight.SetPosition(1.0f);
 	spotLight.SetDirection( float3( 1.0f, 0.0f, 0.0f ) );
-	spotLight.SetColor( float3( 0.0f, 0.0f, 0.1f ) * 0 );
+	spotLight.SetColor( float3( 0.0f, 0.0f, 0.1f )  );
 	spotLight.SetAngle( 1.2f );
 	lights[lightCount++] = new Light( spotLight );
 
@@ -193,15 +193,18 @@ void Renderer::UI()
 
 	if ( !game->playing )
 	{
-		int2 pauseWindowSize = int2( 400, 200 );
-		if ( game->win )
-		{
-			ImGui::SetNextWindowPos( ImVec2( static_cast<float>( SCRWIDTH ) - pauseWindowSize.x / 2, static_cast<float>( SCRHEIGHT ) - pauseWindowSize.y / 2 - 240) );
+		const float sw = static_cast<float>(SCRWIDTH);
+		const float sh = static_cast<float>(SCRHEIGHT);
+
+		int2 pauseWindowSize = int2(sw * 0.3f, sh * 0.25f);
+		if (game->win) {
+			ImGui::SetNextWindowPos(ImVec2(sw * 0.5f - pauseWindowSize.x * 0.5f, sh * 0.5f - pauseWindowSize.y * 0.5f - sh * 0.15f));
 		}
 		else
 		{
-			ImGui::SetNextWindowPos( ImVec2( static_cast<float>( SCRWIDTH ) - pauseWindowSize.x / 2, static_cast<float>( SCRHEIGHT ) - pauseWindowSize.y / 2 ) );
+			ImGui::SetNextWindowPos(ImVec2(sw * 0.5f - pauseWindowSize.x * 0.5f, sh * 0.5f - pauseWindowSize.y * 0.5f));
 		}
+
 		ImGui::SetNextWindowSize( ImVec2( static_cast<float>( pauseWindowSize.x ), static_cast<float>( pauseWindowSize.y ) ) );
 		ImGui::Begin( "Game", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove );
 		const char* text = game->win ? "You won!" : "Absorb";
@@ -210,8 +213,8 @@ void Renderer::UI()
 		ImGui::SetCursorPos( textPosition );
 		ImGui::Text( text );
 
-		ImVec2 buttonSize( 100, 25 );
-		ImVec2 buttonPosition( ( ImGui::GetWindowSize().x - buttonSize.x ) * 0.5f, ( ImGui::GetWindowSize().y - buttonSize.y ) * 0.5f + 50 );
+		ImVec2 buttonSize(sw * 0.075f, sh * 0.03f);
+		ImVec2 buttonPosition((ImGui::GetWindowSize().x - buttonSize.x) * 0.5f, (ImGui::GetWindowSize().y - buttonSize.y) * 0.5f + sh * 0.06f);
 		ImGui::SetCursorPos( buttonPosition );
 		if ( ImGui::Button( game->win ? "Quit" : "Play", buttonSize ) )
 		{
@@ -227,7 +230,7 @@ void Renderer::UI()
 
 		text = "Check the README.txt for the controls";
 		textSize = ImGui::CalcTextSize( text );
-		textPosition = ImVec2( ( ImGui::GetWindowSize().x - textSize.x ) * 0.5f, ( ImGui::GetWindowSize().y - textSize.y ) * 0.5f + 90);
+		textPosition = ImVec2((ImGui::GetWindowSize().x - textSize.x) * 0.5f, (ImGui::GetWindowSize().y - textSize.y) * 0.5f + sh * 0.11f);
 		ImGui::SetCursorPos( textPosition );
 		ImGui::Text( text );
 		ImGui::End();

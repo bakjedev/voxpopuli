@@ -296,7 +296,7 @@ Scene::Scene()
 	Primitive* newPrimitives = new Primitive[size];
 	PrimitiveType* newPrimitiveTypes = new PrimitiveType[size];
 
-	newPrimitives[0].sphere = Sphere( float3( 0.45f, 0.055f, 0.4f ),  0.0225f, float3( 0.8f, 1.0f, 0.8f ), 3 );
+	newPrimitives[0].sphere = Sphere(float3(0.45f, 0.055f, 0.4f), 0.0225f, float3(1.0f, 0.3f, 0.3f), 1);
 	newPrimitiveTypes[0] = SPHERE;
 	newPrimitives[1].sphere = Sphere( float3( 0.33f, 0.055f, 0.1f ), 0.0225f, float3( 0.3f, 1.0f, 0.3f ), 1 );
 	newPrimitiveTypes[1] = SPHERE;

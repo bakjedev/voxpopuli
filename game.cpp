@@ -33,7 +33,7 @@ void Game::Init()
 void Game::Update( const float deltaTime )
 {
 	// make light 3 direction go in circles around its position
-	static float angle = 0.0f;
+	/*static float angle = 0.0f;
 	float3 newDirection( 0.0f );
 	float radius = 1.0f;
 	float3 spotLightPos = renderer->lights[3]->GetPosition();
@@ -42,7 +42,7 @@ void Game::Update( const float deltaTime )
 	renderer->lights[3]->SetDirection( newDirection );
 
 	angle += 0.001f * deltaTime;
-	if ( angle > 6.28319f ) angle = 0.0f;
+	if ( angle > 6.28319f ) angle = 0.0f;*/
 	if ( testScene ) renderer->ResetAccumulator();
 
 
@@ -217,13 +217,13 @@ void Game::Update( const float deltaTime )
 	}
 	DrawPointHUD();
 
-	float3 distanceFromGoal( abs( maxValue - redValue ), abs( maxValue - greenValue ), abs( maxValue - blueValue ) );
-	if ( length( distanceFromGoal ) < 5.0f )
+	if (abs(maxValue - redValue) < 15.0f &&
+		abs(maxValue - greenValue) < 15.0f &&
+		abs(maxValue - blueValue) < 15.0f)
 	{
-		//win
 		win = true;
 		playing = false;
-		LoadLevel( 1 );
+		LoadLevel(1);
 	}
 
 }
@@ -234,21 +234,22 @@ void Game::Shutdown()
 
 void Game::DrawPointHUD() const
 {
-	//background
-	renderer->screen->Bar( 0, 0, 100, 40, 0xb9bec7 );
+		const int barW = SCRWIDTH / 8;
+		const int barH = SCRHEIGHT / 30;
+		const int x0 = 0, y0 = 0;
 
-	//bars
-	float redPercentage = redValue / maxValue;
-	if ( redPercentage > 1.0f ) redPercentage = 1.0f;
-	renderer->screen->Bar( 0, 0, static_cast<int>( 100.0f * redPercentage ), 10, 0xFF0000 );
+		//background
+		renderer->screen->Bar(x0, y0, x0 + barW, y0 + barH * 3, 0xb9bec7);
 
-	float greenPercentage = greenValue / maxValue;
-	if ( greenPercentage > 1.0f ) greenPercentage = 1.0f;
-	renderer->screen->Bar( 0, 15, static_cast <int>( 100.0f * greenPercentage ), 25, 0x00FF00 );
+		//bars
+		float redPercentage = min(1.0f, redValue / maxValue);
+		renderer->screen->Bar(x0, y0, x0 + static_cast<int>(barW * redPercentage), y0 + barH, 0xFF0000);
 
-	float bluePercentage = blueValue / maxValue;
-	if ( bluePercentage > 1.0f ) bluePercentage = 1.0f;
-	renderer->screen->Bar( 0, 30, static_cast <int>( 100.0f * bluePercentage ), 40, 0x0000FF );
+		float greenPercentage = min(1.0f, greenValue / maxValue);
+		renderer->screen->Bar(x0, y0 + barH, x0 + static_cast<int>(barW * greenPercentage), y0 + barH * 2, 0x00FF00);
+
+		float bluePercentage = min(1.0f, blueValue / maxValue);
+		renderer->screen->Bar(x0, y0 + barH * 2, x0 + static_cast<int>(barW * bluePercentage), y0 + barH * 3, 0x0000FF);
 }
 
 void Game::LoadLevel( const uint level )
@@ -300,10 +301,9 @@ void Game::LoadLevel( const uint level )
 		renderer->camera.camPos = float3(0.07f, 0.06f, 0.71f);
 		renderer->camera.camTarget = float3(0.13f, 0.06f, 0.65f);
 		renderer->scene.bvh->primitiveData[0].sphere.material = 2;
-		renderer->scene.bvh->primitiveData[1].sphere.material = 3;
+		renderer->scene.bvh->primitiveData[1].sphere.material = 2;
 		renderer->scene.bvh->primitiveData[2].sphere.material = 2;
 
-		renderer->scene.bvh->primitiveData[1].sphere.color = float3( 1.0f );
 
 		renderer->scene.bvh->SetPosition( 0, float3( 0.16f, 0.055f, 0.51f ) );
 		renderer->scene.bvh->SetPosition( 1, renderer->scene.bvh->primitiveData[1].sphere.pos + float3(-0.1f, 0.005f, 0.0f) );
