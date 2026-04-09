@@ -6,11 +6,11 @@
 
 void Renderer::Init()
 {
-	newAccumulator = (float4*)MALLOC64( SCRWIDTH * SCRHEIGHT * 16 );
-	memset( newAccumulator, 0, SCRWIDTH * SCRHEIGHT * 16 );
+	newAccumulator = (float4*)MALLOC64( SCRWIDTH * SCRHEIGHT * sizeof(float4) );
+	memset( newAccumulator, 0, SCRWIDTH * SCRHEIGHT * sizeof(float4));
 
-	oldAccumulator = (float4*)MALLOC64( SCRWIDTH * SCRHEIGHT * 16 );
-	memset( oldAccumulator, 0, SCRWIDTH * SCRHEIGHT * 16 );
+	oldAccumulator = (float4*)MALLOC64( SCRWIDTH * SCRHEIGHT * sizeof(float4));
+	memset( oldAccumulator, 0, SCRWIDTH * SCRHEIGHT * sizeof(float4));
 
 	skybox = new Skybox( "assets/quarry_cloudy_4k.hdr" ); // https://polyhaven.com/a/quarry_cloudy
 
@@ -113,7 +113,7 @@ void Renderer::Tick( const float deltaTime )
 			newAccumulator[index] = pixelColor;
 		}
 	}
-	memcpy( oldAccumulator, newAccumulator, SCRWIDTH * SCRHEIGHT * 16 );
+	memcpy( oldAccumulator, newAccumulator, SCRWIDTH * SCRHEIGHT * sizeof(float4));
 
 	for (int i = 0; i < SCRWIDTH * SCRHEIGHT; i++)
 	{
