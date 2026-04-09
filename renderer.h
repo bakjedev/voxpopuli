@@ -51,7 +51,9 @@ namespace Tmpl8
 		// settings
 		bool toneMapping{ true };
 		bool reprojection{ true };
+		bool accumulation{ false };
 		float reprojectAlpha{ 0.9f };
+		float accumulationAlpha{ 0.9f };
 		uint activeMaterial{ 1 };
 
 		// other methods

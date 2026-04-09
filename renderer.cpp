@@ -30,26 +30,26 @@ void Renderer::Init()
 	Light pointLight;
 	pointLight.SetType( Light::Type::Point );
 	pointLight.SetPosition( float3( 0.2f, 0.0325f, 0.3f ) );
-	pointLight.SetColor( float3( 0.1f, 0.0f, 0.0f ) );
+	pointLight.SetColor( float3( 0.1f, 0.0f, 0.0f ) * 0 );
 	lights[lightCount++] = new Light( pointLight );
 
 	Light pointLight2;
 	pointLight2.SetType( Light::Type::Point );
 	pointLight2.SetPosition( float3( 0.4f, 0.0325f, 0.5f ) );
-	pointLight2.SetColor( float3( 0.0f, 0.1f, 0.0f ) );
+	pointLight2.SetColor( float3( 0.0f, 0.1f, 0.0f ) * 0 );
 	lights[lightCount++] = new Light( pointLight2 );
 
 	Light pointLight3;
 	pointLight3.SetType( Light::Type::Point );
 	pointLight3.SetPosition( float3( 0.6f, 0.0325f, 0.23f ) );
-	pointLight3.SetColor( float3( 0.0f, 0.0f, 0.1f ) );
+	pointLight3.SetColor( float3( 0.0f, 0.0f, 0.1f ) * 0 );
 	lights[lightCount++] = new Light( pointLight3 );
 
 	Light spotLight;
 	spotLight.SetType( Light::Type::Spot );
 	spotLight.SetPosition(1.0f);
 	spotLight.SetDirection( float3( 1.0f, 0.0f, 0.0f ) );
-	spotLight.SetColor( float3( 0.0f, 0.0f, 0.1f ) );
+	spotLight.SetColor( float3( 0.0f, 0.0f, 0.1f ) * 0 );
 	spotLight.SetAngle( 1.2f );
 	lights[lightCount++] = new Light( spotLight );
 
@@ -100,18 +100,27 @@ void Renderer::Tick( const float deltaTime )
 				pixelColor = adjustedAlpha * oldColor + ( 1 - adjustedAlpha ) * newColor;
 				pixelColor.w = primaryRay.t;
 			}
+			else if (accumulation) {
+				float4 oldColor = oldAccumulator[index];
+				pixelColor = accumulationAlpha * oldColor + (1 - accumulationAlpha) * newColor;
+				pixelColor.w = primaryRay.t;
+			}
 			else
 			{
 				pixelColor = newColor;
 			}
 		set:
 			newAccumulator[index] = pixelColor;
-			if ( toneMapping ) pixelColor = float4( AcesApproximated( float3( pixelColor.x, pixelColor.y, pixelColor.z ) ), primaryRay.t );
-			screen->pixels[index] = RGBF32_to_RGB8( &pixelColor );
 		}
 	}
 	memcpy( oldAccumulator, newAccumulator, SCRWIDTH * SCRHEIGHT * 16 );
 
+	for (int i = 0; i < SCRWIDTH * SCRHEIGHT; i++)
+	{
+		float4 pixelColor = newAccumulator[i];
+		if (toneMapping) pixelColor = float4(AcesApproximated(float3(pixelColor)), pixelColor.w);
+		screen->pixels[i] = RGBF32_to_RGB8(&pixelColor);
+	}
 
 	reprojectAlpha += 0.00005f * deltaTime;
 	if ( reprojectAlpha > 0.999f ) reprojectAlpha = 0.999f;
@@ -257,9 +266,17 @@ float3 Renderer::Trace( Ray& ray, int depth, const bool draw )
 	scene.FindNearest( ray );
 	if ( ray.t == 1e34f ) return skybox->render( ray ); // if no voxel hit, return skybox color
 
+	float3 albedo = ray.GetColor();
+	
+	float survivalProb = min(1.0f, max({ albedo.x, albedo.y, albedo.z }));
+	if (depth > 0)
+	{
+		if (survivalProb < 1e-6f) return float3(0.0f);
+		if (RandomFloat() > survivalProb) return float3(0.0f);
+	}
+
 	Material* material = materials[ray.GetMaterial()];
 	float3 normal = ray.N;
-	float3 albedo = ray.GetColor();
 
 	if ( material->texture )
 	{
@@ -363,24 +380,15 @@ float3 Renderer::Trace( Ray& ray, int depth, const bool draw )
 		Ray indirectRay( ray.IntersectionPoint() + randomDirection * EPSILON, randomDirection );
 		indirectLight = Trace( indirectRay, depth + 1, draw ) + ( albedo * material->emission );
 
-		float3 tempSolve = outColor + diffuse * albedo * ( directLight + indirectLight );
-
-		//https://github.com/jbikker/lighthouse2/blob/e61e65444d8ed3074775003f7aa7d60cb0d4792e/lib/rendercore_vulkan_rt/shaders/tools.glsl#L169
-		float survivalProbability = min( 1.0f, max( max( tempSolve.x, tempSolve.y ), tempSolve.z ) ); // i think this is pretty fucky on performance but idk
-		if ( RandomFloat() < survivalProbability )
-		{
-			outColor = tempSolve / survivalProbability;
-		}
+		outColor += diffuse * albedo * ( directLight + indirectLight );
 	}
 
-	return outColor;
+	return outColor / survivalProb;
 }
 
 float3 Renderer::ComputeDirectLighting( const Ray& ray, const float3& normal )
 {
-	bool notEmpty = false;
-	for ( int i = 0; i < MAX_LIGHTS; i++ ) { if ( lights[i] != nullptr ) { notEmpty = true; break; } }
-	if ( !notEmpty ) return float3( 0.0f );
+	if (lightCount == 0) return float3(0.0f);
 
 	float3 result = float3( 0.0f );
 
@@ -436,7 +444,7 @@ float3 Renderer::ComputeDirectLighting( const Ray& ray, const float3& normal )
 
 		const float cosSpotAngle = dot( normalize( lightDirection ), -direction );
 
-		const float cosAngle = cos( light->GetAngle() * 0.5f );
+		const float cosAngle = light->GetCachedAngle();
 
 		if ( cosSpotAngle > cosAngle )
 		{
@@ -472,7 +480,8 @@ int Renderer::PickLight( const float3& intersectionPoint, float* weights ) const
 		if ( lights[i] == nullptr ) break;
 		float3 lightPosition = lights[i]->GetPosition();
 		float3 toLight = lightPosition - intersectionPoint;
-		invDistances[i] = 1.0f / length( toLight );
+		float distSq = dot(toLight, toLight);
+		invDistances[i] = distSq > 1e-10f ? 1.0f / distSq : 0.0f;
 
 		brightnesses[i] = length( lights[i]->GetColor() );
 
@@ -602,8 +611,10 @@ void Renderer::SettingsUI()
 	ImGui::Separator();
 	ImGui::Indent( 16.0f );
 	ImGui::Checkbox( "toneMapping", &toneMapping );
-	ImGui::Checkbox( "reprojection", &reprojection );
-	ImGui::SliderFloat( "reprojectAlpha", &reprojectAlpha, 0.f, 1.f );
+	ImGui::Checkbox("reprojection", &reprojection);
+	ImGui::Checkbox( "accumulation", &accumulation);
+	ImGui::SliderFloat("reprojectAlpha", &reprojectAlpha, 0.f, 1.f);
+	ImGui::SliderFloat( "accumulationAlpha", &accumulationAlpha, 0.f, 1.f );
 
 	ImGui::Unindent( 16.0f );
 

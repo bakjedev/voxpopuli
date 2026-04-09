@@ -13,8 +13,10 @@ namespace Tmpl8
 		float3 GetPosition() const { return position; }
 		void SetDirection( const float3 d ) { direction = d; }
 		float3 GetDirection() const { return direction; }
-		void SetAngle( const float a ) { angle = a; }
+		void SetAngle(float a) { angle = a; cachedCosHalfAngle = cos(a * 0.5f); }
 		float GetAngle() const { return angle; }
+		float GetCachedAngle() const { return cachedCosHalfAngle; }
+
 
 		void SetColor( const float3 rgb )
 		{
@@ -35,5 +37,6 @@ namespace Tmpl8
 		float angle; // spot
 		uint color; // all
 		Type type; // all
+		float cachedCosHalfAngle = 0.0f;
 	};
 }

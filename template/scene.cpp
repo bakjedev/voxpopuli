@@ -286,10 +286,7 @@ void BVH::SetPosition( uint idx, float3 pos )
 		primitiveData[idx].cube.b[0] = pos;
 		primitiveData[idx].cube.b[1] = pos + size;
 	}
-	for ( int i = 0; i < N; i++ )
-	{
-		UpdateNodeBounds( i );
-	}
+	BuildBVH();
 }
 
 Scene::Scene()
@@ -299,7 +296,7 @@ Scene::Scene()
 	Primitive* newPrimitives = new Primitive[size];
 	PrimitiveType* newPrimitiveTypes = new PrimitiveType[size];
 
-	newPrimitives[0].sphere = Sphere( float3( 0.45f, 0.055f, 0.4f ),  0.0225f, float3( 1.0f, 0.3f, 0.3f ), 1 );
+	newPrimitives[0].sphere = Sphere( float3( 0.45f, 0.055f, 0.4f ),  0.0225f, float3( 0.8f, 1.0f, 0.8f ), 3 );
 	newPrimitiveTypes[0] = SPHERE;
 	newPrimitives[1].sphere = Sphere( float3( 0.33f, 0.055f, 0.1f ), 0.0225f, float3( 0.3f, 1.0f, 0.3f ), 1 );
 	newPrimitiveTypes[1] = SPHERE;
@@ -570,11 +567,11 @@ bool Scene::IsOccluded( const Ray& ray )
 
 bool Scene::IntersectAABB( const Ray& ray, const float3 bmin, const float3 bmax )
 {
-	float tx1 = ( bmin.x - ray.origin.x ) / ray.direction.x, tx2 = ( bmax.x - ray.origin.x ) / ray.direction.x;
-	float tmin = min( tx1, tx2 ), tmax = max( tx1, tx2 );
-	float ty1 = ( bmin.y - ray.origin.y ) / ray.direction.y, ty2 = ( bmax.y - ray.origin.y ) / ray.direction.y;
-	tmin = max( tmin, min( ty1, ty2 ) ), tmax = min( tmax, max( ty1, ty2 ) );
-	float tz1 = ( bmin.z - ray.origin.z ) / ray.direction.z, tz2 = ( bmax.z - ray.origin.z ) / ray.direction.z;
-	tmin = max( tmin, min( tz1, tz2 ) ), tmax = min( tmax, max( tz1, tz2 ) );
+	float tx1 = (bmin.x - ray.origin.x) * ray.rD.x, tx2 = (bmax.x - ray.origin.x) * ray.rD.x;
+	float tmin = min(tx1, tx2), tmax = max(tx1, tx2);
+	float ty1 = (bmin.y - ray.origin.y) * ray.rD.y, ty2 = (bmax.y - ray.origin.y) * ray.rD.y;
+	tmin = max(tmin, min(ty1, ty2)), tmax = min(tmax, max(ty1, ty2));
+	float tz1 = (bmin.z - ray.origin.z) * ray.rD.z, tz2 = (bmax.z - ray.origin.z) * ray.rD.z;
+	tmin = max(tmin, min(tz1, tz2)), tmax = min(tmax, max(tz1, tz2));
 	return tmax >= tmin && tmin < ray.t && tmax > 0;
 }

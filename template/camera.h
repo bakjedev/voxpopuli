@@ -1,9 +1,9 @@
 #pragma once
 // default screen resolution
-#define SCRWIDTH	512
-#define SCRHEIGHT	320
+#define SCRWIDTH	1280
+#define SCRHEIGHT	720
 // #define FULLSCREEN
-#define DOUBLESIZE
+//#define DOUBLESIZE
 
 namespace Tmpl8
 {
@@ -205,7 +205,7 @@ namespace Tmpl8
 		float aspect;
 		float3 camPos, camTarget;
 		float3 topLeft, topRight, bottomLeft;
-		bool controls = false;
+		bool controls = true;
 
 		float3 right, up;
 
