@@ -205,7 +205,7 @@ namespace Tmpl8
 		float aspect;
 		float3 camPos, camTarget;
 		float3 topLeft, topRight, bottomLeft;
-		bool controls = true;
+		bool controls = false;
 
 		float3 right, up;
 
